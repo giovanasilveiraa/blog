@@ -29,11 +29,11 @@ interface HomeProps {
 export default function Home() {
   return (
     <>
-      <main>
+      <main className={commonStyles.container}>
         <Header />
-        <div>
+        <div className={styles.posts}>
           <Link href="/">
-            <a>
+            <a className={styles.post}>
               <strong>Título</strong>
               <p>Resumo</p>
               <ul>
@@ -41,8 +41,6 @@ export default function Home() {
                   <FiCalendar />
                   15 Mar 2021
                 </li>
-              </ul>
-              <ul>
                 <li>
                   <FiUser />
                   Giovana Silveira
@@ -50,6 +48,24 @@ export default function Home() {
               </ul>
             </a>
           </Link>
+
+          <Link href="/">
+            <a className={styles.post}>
+              <strong>Título</strong>
+              <p>Resumo</p>
+              <ul>
+                <li>
+                  <FiCalendar />
+                  15 Mar 2021
+                </li>
+                <li>
+                  <FiUser />
+                  Giovana Silveira
+                </li>
+              </ul>
+            </a>
+          </Link>
+          <button type="button">Carregar mais posts</button>
         </div>
       </main>
     </>
