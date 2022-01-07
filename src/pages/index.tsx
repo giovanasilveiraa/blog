@@ -1,6 +1,11 @@
+/* eslint-disable prettier/prettier */
 import { GetStaticProps } from 'next';
 import Link from 'next/link';
+import { useState } from 'react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { FiCalendar, FiUser } from 'react-icons/fi';
+import Prismic from '@prismicio/client';
 import Header from '../components/Header';
 import { getPrismicClient } from '../services/prismic';
 
@@ -26,45 +31,44 @@ interface HomeProps {
   postsPagination: PostPagination;
 }
 
-export default function Home() {
+export default function Home({ postsPagination }: HomeProps): JSX.Element {
+  const formattedPost = postsPagination.results.map(post => {
+    return {
+      ...post,
+      first_publication_date: format(
+        new Date(post.first_publication_date),
+        'dd MMM yyyy',
+        {
+          locale: ptBR,
+        }
+      ),
+    };
+  });
+
+  const [posts, setPosts] = useState<Post[]>(formattedPost);
   return (
     <>
       <main className={commonStyles.container}>
         <Header />
         <div className={styles.posts}>
-          <Link href="/">
+          {posts.map(post => (
+            <Link href={`/post/${post.uid}`} key={post.uid}>
             <a className={styles.post}>
-              <strong>Título</strong>
-              <p>Resumo</p>
+              <strong>{post.data.title}</strong>
+              <p>{post.data.subtitle}</p>
               <ul>
                 <li>
                   <FiCalendar />
-                  15 Mar 2021
+                    {post.first_publication_date}
                 </li>
                 <li>
                   <FiUser />
-                  Giovana Silveira
-                </li>
-              </ul>
-            </a>
-          </Link>
-
-          <Link href="/">
-            <a className={styles.post}>
-              <strong>Título</strong>
-              <p>Resumo</p>
-              <ul>
-                <li>
-                  <FiCalendar />
-                  15 Mar 2021
-                </li>
-                <li>
-                  <FiUser />
-                  Giovana Silveira
-                </li>
-              </ul>
-            </a>
-          </Link>
+                    {post.data.author}
+                  </li>
+                </ul>
+              </a>
+            </Link>
+          ))}
           <button type="button">Carregar mais posts</button>
         </div>
       </main>
@@ -72,9 +76,35 @@ export default function Home() {
   );
 }
 
-// export const getStaticProps = async () => {
-//  const prismic = getPrismicClient();
-//  const postsResponse = await prismic.query(TODO);
+export const getStaticProps: GetStaticProps = async () => {
+  const prismic = getPrismicClient();
+  const postsResponse = await prismic.query(
+    [Prismic.Predicates.at('document.type', 'posts')],
+    {
+      pageSize: 1,
+    }
+  );
 
-//  TODO
-// };
+  const posts = postsResponse.results.map(post => {
+    return {
+      uid: post.uid,
+      first_publication_date: post.first_publication_date,
+      data: {
+        title: post.data.title,
+        subtitle: post.data.subtitle,
+        author: post.data.author,
+      },
+    };
+  });
+
+  const postsPagination = {
+    next_page: postsResponse.next_page,
+    results: posts,
+  };
+
+  return {
+    props: {
+      postsPagination,
+    },
+  };
+};
